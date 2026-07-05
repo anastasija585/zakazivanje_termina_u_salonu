@@ -1,13 +1,7 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { ref, push } from "firebase/database";
+import { ref, push, get, child } from "firebase/database";
 import { database } from "../firebase/firebaseConfig";
 
 export default function ReservationScreen() {
@@ -24,7 +18,27 @@ export default function ReservationScreen() {
     }
 
     try {
-      const reservationRef = await push(ref(database, "reservations"), {
+      const snapshot = await get(child(ref(database), "reservations"));
+
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+
+        const zauzetTermin = Object.values(data).some((reservation: any) => {
+          return (
+            reservation.service === service &&
+            reservation.date === date &&
+            reservation.time === time &&
+            reservation.status !== "Odbijeno"
+          );
+        });
+
+        if (zauzetTermin) {
+          alert("Termin nije slobodan. Izaberite drugi datum ili vreme.");
+          return;
+        }
+      }
+
+      await push(ref(database, "reservations"), {
         name,
         service,
         date,
@@ -33,10 +47,7 @@ export default function ReservationScreen() {
         createdAt: new Date().toISOString(),
       });
 
-      console.log("Rezervacija sačuvana:", reservationRef.key);
-
       alert("Rezervacija je uspešno sačuvana!");
-
       router.replace("/");
     } catch (error) {
       console.error("Greška:", error);
@@ -81,45 +92,10 @@ export default function ReservationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-
-  service: {
-    fontSize: 20,
-    textAlign: "center",
-    marginBottom: 25,
-  },
-
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 15,
-    fontSize: 16,
-  },
-
-  button: {
-    backgroundColor: "#d63384",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-
-  buttonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
+  container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#fff" },
+  title: { fontSize: 30, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
+  service: { fontSize: 20, textAlign: "center", marginBottom: 25 },
+  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 12, marginBottom: 15, fontSize: 16 },
+  button: { backgroundColor: "#d63384", padding: 15, borderRadius: 10, alignItems: "center" },
+  buttonText: { color: "white", fontSize: 18, fontWeight: "bold" },
 });
