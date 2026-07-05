@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
+import { router } from "expo-router";
 import { ref, onValue, update, remove } from "firebase/database";
 import { database } from "../firebase/firebaseConfig";
 
@@ -37,9 +38,7 @@ export default function AdminScreen() {
   }, []);
 
   const changeStatus = async (id: string, status: string) => {
-    await update(ref(database, `reservations/${id}`), {
-      status,
-    });
+    await update(ref(database, `reservations/${id}`), { status });
   };
 
   const deleteReservation = async (id: string) => {
@@ -49,6 +48,13 @@ export default function AdminScreen() {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Admin panel</Text>
+
+      <Pressable
+        style={styles.manageButton}
+        onPress={() => router.push("/manage-services" as any)}
+      >
+        <Text style={styles.buttonText}>Upravljanje uslugama</Text>
+      </Pressable>
 
       {reservations.length === 0 ? (
         <Text style={styles.empty}>Nema rezervacija.</Text>
@@ -92,6 +98,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#fff" },
   title: { fontSize: 30, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
   empty: { textAlign: "center", fontSize: 18 },
+  manageButton: { backgroundColor: "#0d6efd", padding: 15, borderRadius: 10, alignItems: "center", marginBottom: 20 },
   card: { borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 15, marginBottom: 15 },
   text: { fontSize: 16, marginBottom: 5 },
   status: { fontSize: 16, fontWeight: "bold", marginVertical: 10 },
