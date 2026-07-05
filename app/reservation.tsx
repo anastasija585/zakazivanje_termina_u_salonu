@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { ref, push, get, child } from "firebase/database";
-import { database } from "../firebase/firebaseConfig";
+import { auth, database } from "../firebase/firebaseConfig";
 
 export default function ReservationScreen() {
   const { service } = useLocalSearchParams();
@@ -44,11 +44,12 @@ export default function ReservationScreen() {
         date,
         time,
         status: "Na čekanju",
+        userId: auth.currentUser?.uid,
         createdAt: new Date().toISOString(),
       });
 
       alert("Rezervacija je uspešno sačuvana!");
-      router.replace("/");
+      router.replace("/user-home");
     } catch (error) {
       console.error("Greška:", error);
       alert("Greška pri upisu u Firebase.");
