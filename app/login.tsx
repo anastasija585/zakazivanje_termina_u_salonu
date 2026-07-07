@@ -12,7 +12,7 @@ export default function LoginScreen() {
 
   const loginUser = async () => {
     if (!email || !password) {
-      alert("Popunite sva polja.");
+      
       return;
     }
 
@@ -30,7 +30,7 @@ export default function LoginScreen() {
       }
       // KORISNIK
       else {
-        alert("Uspešna prijava!");
+        
         router.replace("/user-home");
       }
     } catch (error: any) {
