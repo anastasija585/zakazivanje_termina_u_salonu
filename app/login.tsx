@@ -22,10 +22,10 @@ export default function LoginScreen() {
       // ADMIN
       if (role === "admin") {
         if (email === "admin@salon.rs") {
-          alert("Uspešna prijava administratora!");
+          
           router.replace("/admin");
         } else {
-          alert("Ovaj nalog nije administrator.");
+          
         }
       }
       // KORISNIK
@@ -35,7 +35,7 @@ export default function LoginScreen() {
       }
     } catch (error: any) {
       console.error(error);
-      alert("Pogrešan email ili lozinka.");
+      
     }
   };
 

@@ -12,7 +12,7 @@ export default function RegisterScreen() {
 
   const registerUser = async () => {
     if (!name || !email || !password) {
-      alert("Popunite sva polja.");
+      
       return;
     }
 
@@ -32,11 +32,11 @@ export default function RegisterScreen() {
         createdAt: new Date().toISOString(),
       });
 
-      alert("Registracija uspešna!");
+      
       router.replace("/login");
     } catch (error: any) {
       console.error(error);
-      alert("Greška pri registraciji: " + error.message);
+      
     }
   };
 

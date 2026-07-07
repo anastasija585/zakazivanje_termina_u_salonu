@@ -7,12 +7,14 @@ type Service = {
   id: string;
   name: string;
   price?: string;
+  duration?: string;
 };
 
 export default function ManageServicesScreen() {
   const [services, setServices] = useState<Service[]>([]);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [duration, setDuration] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -36,8 +38,7 @@ export default function ManageServicesScreen() {
   }, []);
 
   const saveService = async () => {
-    if (!name) {
-      alert("Unesite naziv usluge.");
+    if (!name || !price || !duration) {
       return;
     }
 
@@ -45,30 +46,31 @@ export default function ManageServicesScreen() {
       await update(ref(database, `services/${editingId}`), {
         name,
         price,
+        duration,
       });
-      alert("Usluga je izmenjena.");
       setEditingId(null);
     } else {
       await push(ref(database, "services"), {
         name,
         price,
+        duration,
       });
-      alert("Usluga je dodata.");
     }
 
     setName("");
     setPrice("");
+    setDuration("");
   };
 
   const editService = (service: Service) => {
     setEditingId(service.id);
     setName(service.name);
     setPrice(service.price || "");
+    setDuration(service.duration || "");
   };
 
   const deleteService = async (id: string) => {
     await remove(ref(database, `services/${id}`));
-    alert("Usluga je obrisana.");
   };
 
   return (
@@ -90,6 +92,14 @@ export default function ManageServicesScreen() {
         keyboardType="numeric"
       />
 
+      <TextInput
+        style={styles.input}
+        placeholder="Trajanje u minutima, npr. 60"
+        value={duration}
+        onChangeText={setDuration}
+        keyboardType="numeric"
+      />
+
       <Pressable style={styles.addButton} onPress={saveService}>
         <Text style={styles.buttonText}>
           {editingId ? "Sačuvaj izmenu" : "Dodaj uslugu"}
@@ -99,7 +109,8 @@ export default function ManageServicesScreen() {
       {services.map((service) => (
         <View key={service.id} style={styles.card}>
           <Text style={styles.text}>Naziv: {service.name}</Text>
-          <Text style={styles.text}>Cena: {service.price || "Nije uneta"}</Text>
+          <Text style={styles.text}>Cena: {service.price || "Nije uneta"} RSD</Text>
+          <Text style={styles.text}>Trajanje: {service.duration || "Nije uneto"} min</Text>
 
           <Pressable
             style={[styles.button, styles.editButton]}
