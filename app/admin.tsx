@@ -12,6 +12,7 @@ type Reservation = {
   date: string;
   time: string;
   status: string;
+  userId?: string;
 };
 
 export default function AdminScreen() {
@@ -74,6 +75,9 @@ export default function AdminScreen() {
         reservations.map((item) => (
           <View key={item.id} style={styles.card}>
             <Text style={styles.text}>Ime: {item.name}</Text>
+            <Text style={styles.text}>
+              ID korisnika: #{item.userId?.substring(0, 8)}
+            </Text>
             <Text style={styles.text}>Usluga: {item.service}</Text>
             <Text style={styles.text}>Datum: {item.date}</Text>
             <Text style={styles.text}>Vreme: {item.time}</Text>
