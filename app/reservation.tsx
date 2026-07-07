@@ -20,13 +20,14 @@ const toTime = (minutes: number) => {
   return `${h}:${m}`;
 };
 
-const overlaps = (
-  start1: number,
-  end1: number,
-  start2: number,
-  end2: number
-) => {
+const overlaps = (start1: number, end1: number, start2: number, end2: number) => {
   return start1 < end2 && start2 < end1;
+};
+
+const addDays = (date: Date, days: number) => {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + days);
+  return copy.toISOString().split("T")[0];
 };
 
 export default function ReservationScreen() {
@@ -39,9 +40,11 @@ export default function ReservationScreen() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [freeTimes, setFreeTimes] = useState<string[]>([]);
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [markedDates, setMarkedDates] = useState<any>({});
 
   useEffect(() => {
-    const loadUserName = async () => {
+    const loadData = async () => {
       const currentUser = auth.currentUser;
 
       if (!currentUser) {
@@ -49,30 +52,31 @@ export default function ReservationScreen() {
         return;
       }
 
-      const snapshot = await get(child(ref(database), `users/${currentUser.uid}`));
+      const userSnapshot = await get(child(ref(database), `users/${currentUser.uid}`));
 
-      if (snapshot.exists()) {
-        setName(snapshot.val().name);
+      if (userSnapshot.exists()) {
+        setName(userSnapshot.val().name);
       }
+
+      const reservationsSnapshot = await get(child(ref(database), "reservations"));
+      const reservationList = reservationsSnapshot.exists()
+        ? Object.values(reservationsSnapshot.val())
+        : [];
+
+      setReservations(reservationList);
+      markCalendarDates(reservationList);
     };
 
-    loadUserName();
+    loadData();
   }, []);
 
-  const calculateFreeTimes = async (selectedDate: string) => {
-    const snapshot = await get(child(ref(database), "reservations"));
-    const reservations = snapshot.exists() ? Object.values(snapshot.val()) : [];
-
+  const getFreeTimesForDate = (selectedDate: string, reservationList = reservations) => {
     const possibleTimes: string[] = [];
 
-    for (
-      let start = salonStart;
-      start + totalDuration <= salonEnd;
-      start += step
-    ) {
+    for (let start = salonStart; start + totalDuration <= salonEnd; start += step) {
       const end = start + totalDuration;
 
-      const isBusy = reservations.some((reservation: any) => {
+      const isBusy = reservationList.some((reservation: any) => {
         if (reservation.date !== selectedDate) return false;
         if (reservation.status === "Odbijeno") return false;
 
@@ -88,7 +92,66 @@ export default function ReservationScreen() {
       }
     }
 
-    setFreeTimes(possibleTimes);
+    return possibleTimes;
+  };
+
+  const markCalendarDates = (reservationList: any[]) => {
+    const marks: any = {};
+    const today = new Date();
+
+    for (let i = 0; i < 180; i++) {
+      const currentDate = addDays(today, i);
+      const free = getFreeTimesForDate(currentDate, reservationList);
+
+      let color = "#198754"; // zeleno
+
+      if (free.length === 0) {
+        color = "#dc3545"; // crveno
+      } else if (free.length <= 2) {
+        color = "#fd7e14"; // narandžasto
+      }
+
+      marks[currentDate] = {
+  customStyles: {
+    container: {
+      backgroundColor: color,
+      borderRadius: 8,
+    },
+    text: {
+      color: "white",
+      fontWeight: "bold",
+    },
+  },
+};
+    }
+
+    setMarkedDates(marks);
+  };
+
+  const handleDayPress = (day: any) => {
+    const selectedDate = day.dateString;
+
+    setDate(selectedDate);
+    setTime("");
+
+    const times = getFreeTimesForDate(selectedDate);
+    setFreeTimes(times);
+
+    setMarkedDates({
+      ...markedDates,
+      [selectedDate]: {
+  customStyles: {
+    container: {
+      backgroundColor: "#d63384",
+      borderRadius: 8,
+    },
+    text: {
+      color: "white",
+      fontWeight: "bold",
+    },
+  },
+},
+    });
   };
 
   const saveReservation = async () => {
@@ -116,31 +179,23 @@ export default function ReservationScreen() {
       <Text style={styles.title}>Zakazivanje termina</Text>
 
       <Text style={styles.text}>Korisnik: {name}</Text>
-
-      <Text style={styles.text}>
-        Usluge: {selectedServices.join(", ")}
-      </Text>
-
-      <Text style={styles.text}>
-        Ukupno trajanje: {totalDuration} min
-      </Text>
+      <Text style={styles.text}>Usluge: {selectedServices.join(", ")}</Text>
+      <Text style={styles.text}>Ukupno trajanje: {totalDuration} min</Text>
 
       <Text style={styles.sectionTitle}>Izaberite datum</Text>
 
+      <View style={styles.legend}>
+        <Text>🟢 Dostupno</Text>
+        <Text>🟠 Malo termina</Text>
+        <Text>🔴 Popunjeno</Text>
+      </View>
+
       <Calendar
-        minDate={new Date().toISOString().split("T")[0]}
-        onDayPress={(day) => {
-          setDate(day.dateString);
-          setTime("");
-          calculateFreeTimes(day.dateString);
-        }}
-        markedDates={{
-          [date]: {
-            selected: true,
-            selectedColor: "#d63384",
-          },
-        }}
-      />
+  markingType="custom"
+  minDate={new Date().toISOString().split("T")[0]}
+  onDayPress={handleDayPress}
+  markedDates={markedDates}
+/>
 
       {date !== "" && (
         <>
@@ -153,10 +208,7 @@ export default function ReservationScreen() {
               {freeTimes.map((item) => (
                 <Pressable
                   key={item}
-                  style={[
-                    styles.timeButton,
-                    time === item && styles.selectedTime,
-                  ]}
+                  style={[styles.timeButton, time === item && styles.selectedTime]}
                   onPress={() => setTime(item)}
                 >
                   <Text style={styles.timeText}>{item}</Text>
@@ -179,6 +231,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 30, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
   text: { fontSize: 18, marginBottom: 10, textAlign: "center" },
   sectionTitle: { fontSize: 20, fontWeight: "bold", marginTop: 25, marginBottom: 15 },
+  legend: { flexDirection: "row", justifyContent: "space-around", marginBottom: 10 },
   timeContainer: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   timeButton: { backgroundColor: "#eee", padding: 12, borderRadius: 8, marginBottom: 10 },
   selectedTime: { backgroundColor: "#d63384" },
