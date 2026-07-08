@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase/firebaseConfig";
-import { putData } from "../firebase/firebaseApi";
+import { ref, set } from "firebase/database";
+import { auth, database } from "../firebase/firebaseConfig";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
@@ -20,6 +20,7 @@ export default function RegisterScreen() {
 
   const registerUser = async () => {
     if (!name || !surname || !email || !password) {
+      console.log("Nisu popunjena sva polja.");
       return;
     }
 
@@ -32,7 +33,7 @@ export default function RegisterScreen() {
 
       const user = userCredential.user;
 
-      await putData(`users/${user.uid}`, {
+      await set(ref(database, `users/${user.uid}`), {
         name,
         surname,
         email,
@@ -42,7 +43,7 @@ export default function RegisterScreen() {
 
       router.replace("/login");
     } catch (error) {
-      console.error(error);
+      console.error("Greška pri registraciji:", error);
     }
   };
 
@@ -164,9 +165,9 @@ const styles = StyleSheet.create({
     color: "#7b4f43",
   },
   backButton: {
-    alignSelf: "flex-start",
-    marginBottom: 15,
-  },
+  alignSelf: "flex-start",
+  marginBottom: 15,
+},
   backText: {
     fontSize: 26,
     color: "#8a5f52",

@@ -46,11 +46,10 @@ export default function LoginScreen() {
       imageStyle={{ opacity: 0.24 }}
     >
       <View style={styles.container}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={() => router.replace("/")}>
           <Text style={styles.backText}>←</Text>
         </Pressable>
-
-
+           
         <Text style={styles.title}>Prijava</Text>
         <Text style={styles.subtitle}>Prijavite se na svoj nalog</Text>
 
@@ -105,11 +104,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 28,
   },
-  backButton: {
-    position: "absolute",
-    top: 45,
-    left: 25,
-  },
+ backButton: {
+  alignSelf: "flex-start",
+  marginBottom: 15,
+},
   backText: {
     fontSize: 32,
     color: "#4e342e",

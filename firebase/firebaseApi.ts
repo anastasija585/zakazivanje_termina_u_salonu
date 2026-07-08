@@ -13,16 +13,23 @@ async function getToken() {
   return await user.getIdToken();
 }
 
+async function handleResponse(response: Response) {
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error("Firebase REST greška:", data);
+    throw new Error(data?.error || "Greška pri komunikaciji sa bazom.");
+  }
+
+  return data;
+}
+
 export async function getData(path: string) {
   const token = await getToken();
 
   const response = await fetch(`${DATABASE_URL}/${path}.json?auth=${token}`);
 
-  if (!response.ok) {
-    throw new Error("Greška pri učitavanju podataka.");
-  }
-
-  return await response.json();
+  return await handleResponse(response);
 }
 
 export async function postData(path: string, data: any) {
@@ -36,7 +43,7 @@ export async function postData(path: string, data: any) {
     body: JSON.stringify(data),
   });
 
-  return await response.json();
+  return await handleResponse(response);
 }
 
 export async function putData(path: string, data: any) {
@@ -50,7 +57,7 @@ export async function putData(path: string, data: any) {
     body: JSON.stringify(data),
   });
 
-  return await response.json();
+  return await handleResponse(response);
 }
 
 export async function patchData(path: string, data: any) {
@@ -64,7 +71,7 @@ export async function patchData(path: string, data: any) {
     body: JSON.stringify(data),
   });
 
-  return await response.json();
+  return await handleResponse(response);
 }
 
 export async function deleteData(path: string) {
@@ -74,5 +81,5 @@ export async function deleteData(path: string) {
     method: "DELETE",
   });
 
-  return await response.json();
+  return await handleResponse(response);
 }
