@@ -90,6 +90,12 @@ export default function ServicesScreen() {
       imageStyle={{ opacity: 0.14 }}
     >
       <ScrollView contentContainerStyle={styles.container}>
+        <Pressable
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backText}>←</Text>
+        </Pressable>
         <Text style={styles.title}>Izaberite usluge</Text>
         <Text style={styles.subtitle}>Možete izabrati jednu ili više usluga.</Text>
 
@@ -227,4 +233,16 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
   },
+  backButton: {
+  position: "absolute",
+  top: 45,
+  left: 25,
+  zIndex: 10,
+},
+
+backText: {
+  fontSize: 32,
+  color: "#8a5f52",
+  fontWeight: "600",
+},
 });

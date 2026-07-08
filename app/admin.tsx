@@ -128,9 +128,6 @@ export default function AdminScreen() {
             <View key={item.id} style={styles.card}>
               <Text style={styles.name}>{item.name}</Text>
 
-              <Text style={styles.text}>
-                ID korisnika: #{item.userId?.substring(0, 8)}
-              </Text>
 
               <Text style={styles.text}>Usluga: {item.service}</Text>
               <Text style={styles.text}>Datum: {item.date}</Text>
